@@ -1,0 +1,275 @@
+---
+title: "Homework 6"
+author: "Zhenya Ratushko"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem \#1: Estimating Quantiles <small>(8 pts; 2pts each)</small>
+
+There are 9 algorithms in R to estimate population quantiles. Type `?quantile` to read about them. Here we will investigate the variance of some of these estimators. To use the quantile function you use the syntax
+`quantile(vector, probs, type)`.
+For example if you have data in a vector called `sampleData` and you wish to estimate the 80th percentile using algorithm 7 (the default), you use
+`quantile(sampleData, .80, type=7)`
+
+Suppose we're interested in the 95th percentile for $X$, and we know that $X$ follows a uniform distribution. We want to randomly sample $n=30$ values and estimate the 95th percentile. Using MC simulation estimate the following:
+
+a. Which quantile algorithm (4 through 9 has the smallest absolute bias? *Hint: you can use $unif(0,1)$ for the purposes of this estimation, as your answer won't depend on the upper and lower bounds chosen.*
+
+```{r}
+NMC = 1e4
+
+unif_algo_bias_4 = rep(0, NMC)
+unif_algo_bias_5 = rep(0, NMC)
+unif_algo_bias_6 = rep(0, NMC)
+unif_algo_bias_7 = rep(0, NMC)
+unif_algo_bias_8 = rep(0, NMC)
+unif_algo_bias_9 = rep(0, NMC)
+
+unif_algo_var_4 = rep(0, NMC)
+unif_algo_var_5 = rep(0, NMC)
+unif_algo_var_6 = rep(0, NMC)
+unif_algo_var_7 = rep(0, NMC)
+unif_algo_var_8 = rep(0, NMC)
+unif_algo_var_9 = rep(0, NMC)
+
+for(i in 1:NMC) {
+  unif_algo_bias_4[i] = abs(0.95 - quantile(runif(30, 0, 1), .95, type = 4))
+  unif_algo_bias_5[i] = abs(0.95 - quantile(runif(30, 0, 1), .95, type = 5))
+  unif_algo_bias_6[i] = abs(0.95 - quantile(runif(30, 0, 1), .95, type = 6))
+  unif_algo_bias_7[i] = abs(0.95 - quantile(runif(30, 0, 1), .95, type = 7))
+  unif_algo_bias_8[i] = abs(0.95 - quantile(runif(30, 0, 1), .95, type = 8))
+  unif_algo_bias_9[i] = abs(0.95 - quantile(runif(30, 0, 1), .95, type = 9))
+  unif_algo_var_4[i] = quantile(runif(30, 0, 1), .95, type = 4)
+  unif_algo_var_5[i] = quantile(runif(30, 0, 1), .95, type = 5)
+  unif_algo_var_6[i] = quantile(runif(30, 0, 1), .95, type = 6)
+  unif_algo_var_7[i] = quantile(runif(30, 0, 1), .95, type = 7)
+  unif_algo_var_8[i] = quantile(runif(30, 0, 1), .95, type = 8)
+  unif_algo_var_9[i] = quantile(runif(30, 0, 1), .95, type = 9)
+}
+
+unif_df = data.frame(algorithm = c("unif_algo_4", "unif_algo_5", "unif_algo_6", "unif_algo_7", "unif_algo_8", "unif_algo_9"), bias = c(mean(unif_algo_bias_4), mean(unif_algo_bias_5), mean(unif_algo_bias_6), mean(unif_algo_bias_7), mean(unif_algo_bias_8), mean(unif_algo_bias_9)), variance = c(var(unif_algo_var_4), var(unif_algo_var_5), var(unif_algo_var_6), var(unif_algo_var_7), var(unif_algo_var_8), var(unif_algo_var_9)))
+
+unif_df[which.min(unif_df$bias),]
+```
+
+b. Which quantile algorithm (4 through 9) has the smallest variance?
+
+```{r}
+unif_df[which.min(unif_df$variance),]
+```
+
+c. Which method is best for estimating the 95th percentile from a uniform distribution? Justify your answer.
+
+> Algorithm 6 is best for estimating the 95th percentile from a uniform distribution. To prevent underfitting and overfitting in a model, it is important to have low bias and low variance, and of all six models, Algorithm 6 yields the lowest values for both bias and variance.
+
+d. What about if $X\sim N(\mu, \sigma^2)$? Would you prefer a different method for estimating the 95th percentile from a normal distribution? *Hint: repeat the same analysis for $N(0,1)$.*
+
+```{r}
+NMC = 5e4
+
+norm_algo_bias_4 = rep(0, NMC)
+norm_algo_bias_5 = rep(0, NMC)
+norm_algo_bias_6 = rep(0, NMC)
+norm_algo_bias_7 = rep(0, NMC)
+norm_algo_bias_8 = rep(0, NMC)
+norm_algo_bias_9 = rep(0, NMC)
+
+norm_algo_var_4 = rep(0, NMC)
+norm_algo_var_5 = rep(0, NMC)
+norm_algo_var_6 = rep(0, NMC)
+norm_algo_var_7 = rep(0, NMC)
+norm_algo_var_8 = rep(0, NMC)
+norm_algo_var_9 = rep(0, NMC)
+
+for(i in 1:NMC) {
+  norm_algo_bias_4[i] = abs(qnorm(0.95) - quantile(rnorm(30, 0, 1), .95, type = 4))
+  norm_algo_bias_5[i] = abs(qnorm(0.95) - quantile(rnorm(30, 0, 1), .95, type = 5))
+  norm_algo_bias_6[i] = abs(qnorm(0.95) - quantile(rnorm(30, 0, 1), .95, type = 6))
+  norm_algo_bias_7[i] = abs(qnorm(0.95) - quantile(rnorm(30, 0, 1), .95, type = 7))
+  norm_algo_bias_8[i] = abs(qnorm(0.95) - quantile(rnorm(30, 0, 1), .95, type = 8))
+  norm_algo_bias_9[i] = abs(qnorm(0.95) - quantile(rnorm(30, 0, 1), .95, type = 9))
+  norm_algo_var_4[i] = quantile(rnorm(30, 0, 1), .95, type = 4)
+  norm_algo_var_5[i] = quantile(rnorm(30, 0, 1), .95, type = 5)
+  norm_algo_var_6[i] = quantile(rnorm(30, 0, 1), .95, type = 6)
+  norm_algo_var_7[i] = quantile(rnorm(30, 0, 1), .95, type = 7)
+  norm_algo_var_8[i] = quantile(rnorm(30, 0, 1), .95, type = 8)
+  norm_algo_var_9[i] = quantile(rnorm(30, 0, 1), .95, type = 9)
+}
+
+norm_df = data.frame(algorithm = c("norm_algo_4", "norm_algo_5", "norm_algo_6", "norm_algo_7", "norm_algo_8", "norm_algo_9"), bias = c(mean(norm_algo_bias_4), mean(norm_algo_bias_5), mean(norm_algo_bias_6), mean(norm_algo_bias_7), mean(norm_algo_bias_8), mean(norm_algo_bias_9)), variance = c(var(norm_algo_var_4), var(norm_algo_var_5), var(norm_algo_var_6), var(norm_algo_var_7), var(norm_algo_var_8), var(norm_algo_var_9)))
+
+norm_df[which.min(norm_df$bias),]
+norm_df[which.min(norm_df$variance),]
+norm_df[order(norm_df$variance),]
+```
+
+
+> I would prefer a different method for estimating the 95th percentile from a normal distribution; particularly, Algorithm 7. In this scenario, there is not one model that yields both the lowest values for bias and variance, meaning that we must examine the trade-off between the two. When examining all six models and sorting by variance (because values for variance tend to have a wider range than those for bias), Algorithms 4 and 7 consistently yield the lowest variance values (usually with a negligible difference). The bias value for Algorithm 7 tends to be much less than the one for Algorithm 4, which I find makes Algorithm 7 the overall best method.
+
+## Problem \#2: Estimating a Geometric $p$ <small>(6 pts; 2 pts each)</small>
+
+a. Use the method of moments to come up with an estimator for a geometric distributions parameter $p$. *Hint: Use the fact that if $X\sim Geom(p)$ then $EX=\frac{1-p}{p}$. 
+
+```{r}
+# E[X] = x_bar = 1 - p / p
+# p = (1 - p) * x_bar
+# p + p * x_bar = 1
+# p(1 + x_bar) = 1
+# p_hat = 1 / 1 + x_bar <- method of moments estimator
+```
+
+b. Estimate the sampling distribution of this estimator when we sample $n=13$ values from from $Geom(.15)$. Show the histogram of the estimated sampling distribution.
+
+```{r}
+NMC = 1e4
+geometric_estimator_sample = rep(NA, NMC)
+for (i in 1:NMC) {
+  geometric_estimator_sample[i] = 1 / (1 + mean(rgeom(13, 0.15)))
+}
+
+hist(geometric_estimator_sample)
+```
+
+c. Estimate the bias of this estimator. Is it biased? If it is biased, how would you modify it so that you could create an unbiased estimator?
+
+```{r}
+NMC = 1e5
+geometric_estimator_bias = rep(0, NMC)
+
+for(i in 1:NMC) {
+  geometric_estimator_bias[i] = 0.15 - (1/(1 + mean(rgeom(13, 0.15))))
+}
+
+mean(geometric_estimator_bias)
+hist(geometric_estimator_bias)
+```
+
+> Yes, this estimator is biased, because the mean value of the bias distribution does not equal 0. To make it less biased (assuming that we cannot raise the sample size), we can adjust the scale of the estimator by multiplying it by a scalar value less than 1 to reduce its effects. By running the command mean(replicate(1e5, (1 / (1 + mean(rgeom(13, 0.15)))))), we find that the sample probability clusters around 0.16, and when dividing our true probability (0.15) by that amount, we get a number around 0.94, which is the scalar value we need to minimize bias. When we multiply our estimator by that number, we get a smaller mean bias value and can see this effect in the resulting histogram, which clusters more tightly around 0.
+
+```{r}
+NMC = 1e5
+geometric_estimator_bias_better = rep(0, NMC)
+
+for(i in 1:NMC) {
+  geometric_estimator_bias_better[i] = 0.15 - 0.94*(1/(1 + mean(rgeom(13, 0.15))))
+}
+
+mean(geometric_estimator_bias_better)
+hist(geometric_estimator_bias_better)
+```
+
+
+
+## Problem \#3: Estimating $\lambda$ from a Poisson Distribution<small>(8 pts; 2 pts each)</small>
+
+It is interesting that if $X\sim Pois(\lambda)$ that $EX=VarX=\lambda$. One could use either $\bar{X}$ or $S^2$ as an estimator of $\lambda$ perhaps. 
+
+a. Using $n=15$ and $\lambda=20$ for this problem, use MC simulation to estimate the sampling distribution of the estimator $\bar{X}$. Show its histogram. 
+
+```{r}
+NMC = 1e4
+xbar_estimator_sample = rep(NA, NMC)
+for (i in 1:NMC) {
+  fake_data = rpois(n = 15, lambda = 20)
+  xbar_estimator_sample[i] = mean(fake_data)
+}
+
+hist(xbar_estimator_sample)
+```
+
+b. Repeat the same but this time use $S^2$. 
+
+```{r}
+NMC = 1e4
+var_estimator_sample = rep(NA, NMC)
+for (i in 1:NMC) {
+  fake_data = rpois(n = 15, lambda = 20)
+  var_estimator_sample[i] = var(fake_data)
+}
+
+hist(var_estimator_sample)
+```
+
+c. Compare the two estimators. Would you prefer one over the other? Why?
+
+> I would prefer the xbar estimator over the S^2 estimator, because the xbar estimator yields a smaller range of unique replicate values (16 to 24), which lends itself to more consistency and accuracy. The s^2 estimator is more skewed to the right and has a larger range of unique replicate values (0 to 70), which presents the possibility of there being too many outliers to ensure accuracy.
+
+d. What about a linear combination of the two variables? Could you construct an estimator of $\lambda$ of the form $a\bar{X} + bS^2$ that would be better than using either of them by themselves? 
+
+```{r}
+NMC = 1e4
+both_estimator_sample = rep(NA, NMC)
+both_estimator_sample_weighted = rep(NA, NMC)
+for (i in 1:NMC) {
+  fake_data = rpois(n = 15, lambda = 20)
+  both_estimator_sample[i] = mean(fake_data) + var(fake_data)
+}
+
+for (i in 1:NMC) {
+  fake_data = rpois(n = 15, lambda = 20)
+  both_estimator_sample_weighted[i] = mean(fake_data) + ((1/32) * var(fake_data))
+}
+
+hist(both_estimator_sample)
+hist(both_estimator_sample_weighted)
+```
+
+> I am not able to construct an estimator of $\lambda$ of the form $a\bar{X} + bS^2$ that would be better than using either of them by themselves. When combining the two in an MC simulation, the range of unique replicate values changes to ~ 20 to 80, which is smaller than in the S^2 estimator but much larger than in the xbar simulation. Even when we try to minimize the influence of the S^2 by multiplying it by a number smaller than 1, it still fails to yield as small of a range as the xbar estimator does.
+
+## Problem \#4: The Standard Error of $\bar{X}$<small>(8 pts; 2 pts each)</small>
+
+What would be the required sample size $n$ so that the standard error of $\bar{X}$ (i.e. $SD(\bar{X})$) would be 2 (or just under 2) for the following populations:
+
+```{r}
+# following the formula that SE = sigma/sqrt(n)...
+```
+
+a. $\text{Normal}(1000, 10^2)$
+
+```{r}
+# solving 2 = 10/sqrt(n) for n yields n = 25
+
+n_4a = 25
+sigma_4a = 10
+standard_error_4a = sigma_4a / sqrt(n_4a)
+standard_error_4a
+```
+
+b. $\text{Poisson}(75)$
+
+```{r}
+# solving 2 = sqrt(75)/sqrt(n) for n yields n = 75/4
+
+n_4b = 75/4
+sigma_4b = sqrt(75)
+standard_error_4b = sigma_4b / sqrt(n_4b)
+standard_error_4b
+```
+
+c. $\text{Binomial}(200, .35)$
+
+```{r}
+# solving 2 = sqrt(91/2)/sqrt(n) for n yields n = 91/8
+
+n_4c = 91/8
+sigma_4c = sqrt(91/2)
+standard_error_4c = sigma_4c / sqrt(n_4c)
+standard_error_4c
+```
+
+d. $\text{Exponential}(.05)$
+
+```{r}
+# solving 2 = 20/sqrt(n) for n yields n = 100
+
+n_4d = 100
+sigma_4d = (1/0.05)
+standard_error_4d = sigma_4d / sqrt(n_4d)
+standard_error_4d
+```
+
+
